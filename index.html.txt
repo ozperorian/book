@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  />
+  <title>今日、学校休みかな</title>
+  <meta name="theme-color" content="#0f172a" />
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    :root {
+      --bg: #f7f3ea;
+      --bg-soft: #efe9dd;
+      --paper: #fffdf8;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: rgba(15, 23, 42, 0.08);
+      --accent: #e94b7d;
+      --accent-dark: #1e3a8a;
+      --shadow: 0 12px 40px rgba(15, 23, 42, 0.12);
+      --radius: 18px;
+      --font-size: 18px;
+      --title-font-size: 32px;
+      --safe-top: env(safe-area-inset-top);
+      --safe-bottom: env(safe-area-inset-bottom);
+    }
+
+    body.theme-light {
+      --bg: #f7f3ea;
+      --bg-soft: #efe9dd;
+      --paper: #fffdf8;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: rgba(15, 23, 42, 0.08);
+    }
+
+    body.theme-dark {
+      --bg: #0b1220;
+      --bg-soft: #111827;
+      --paper: #111827;
+      --text: #f3f4f6;
+      --muted: #9ca3af;
+      --line: rgba(255,255,255,0.08);
+    }
+
+    body.theme-midnight {
+      --bg: #090b12;
+      --bg-soft: #0f172a;
+      --paper: #0f172a;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --line: rgba(255,255,255,0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Mincho ProN",
+        "Yu Mincho", "Noto Serif JP", serif;
+      height: 100%;
+    }
+
+    body {
+      transition: background .25s ease, color .25s ease;
+    }
+
+    button {
+      font: inherit;
+      border: none;
+      background: none;
+      color: inherit;
+      cursor: pointer;
+    }
+
+    .app {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .screen {
+      display: none;
+      min-height: 100dvh;
+    }
+
+    .screen.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* COVER */
+    .cover-screen {
+      position: relative;
+      justify-content: flex-end;
+      background:
+        linear-gradient(to top, rgba(10, 20, 40, 0.78), rgba(10, 20, 40, 0.18) 40%, rgba(10, 20, 40, 0.02)),
+        url("cover.png") center center / cover no-repeat;
+      padding:
+        calc(24px + var(--safe-top))
+        20px
+        calc(28px + var(--safe-bottom))
+        20px;
+      color: #fff;
+    }
+
+    .cover-panel {
+      backdrop-filter: blur(10px);
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+    }
+
+    .eyebrow {
+      font-size: 12px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      opacity: .8;
+      margin-bottom: 10px;
+    }
+
+    .book-title {
+      font-size: clamp(30px, 7vw, 42px);
+      line-height: 1.15;
+      margin: 0 0 10px;
+      font-weight: 700;
+    }
+
+    .book-sub {
+      margin: 0;
+      color: rgba(255,255,255,0.88);
+      line-height: 1.7;
+      font-size: 14px;
+    }
+
+    .cover-actions {
+      display: grid;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .primary-btn,
+    .secondary-btn {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 14px;
+      font-weight: 700;
+      transition: transform .15s ease, opacity .15s ease;
+    }
+
+    .primary-btn:active,
+    .secondary-btn:active {
+      transform: scale(.98);
+    }
+
+    .primary-btn {
+      background: #ffffff;
+      color: #0f172a;
+    }
+
+    .secondary-btn {
+      background: rgba(255,255,255,0.14);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.20);
+    }
+
+    /* READER */
+    .reader-screen {
+      background: var(--bg);
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding:
+        calc(10px + var(--safe-top))
+        14px
+        10px
+        14px;
+      background: color-mix(in srgb, var(--bg) 88%, transparent);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .topbar .left,
+    .topbar .right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      min-width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow);
+      font-size: 14px;
+    }
+
+    .header-title {
+      flex: 1;
+      min-width: 0;
+      text-align: center;
+      font-size: 14px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 0 8px;
+    }
+
+    .reader-main {
+      flex: 1;
+      padding: 18px 14px 12px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .page-card {
+      flex: 1;
+      min-height: 0;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .page-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 18px 10px;
+      border-bottom: 1px solid var(--line);
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .page-title {
+      font-size: 18px;
+      color: var(--text);
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .page-body {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      padding: 18px;
+      font-size: var(--font-size);
+      line-height: 2.1;
+      letter-spacing: 0.04em;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .page-body p {
+      margin: 0 0 1.25em;
+      text-align: justify;
+    }
+
+    .page-body.vertical {
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      line-height: 2.2;
+      letter-spacing: 0.08em;
+      padding: 18px 20px;
+    }
+
+    .page-body.vertical p {
+      margin: 0 0 0 1.4em;
+    }
+
+    .bottombar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding:
+        12px
+        14px
+        calc(14px + var(--safe-bottom))
+        14px;
+      border-top: 1px solid var(--line);
+      background: color-mix(in srgb, var(--bg) 92%, transparent);
+      backdrop-filter: blur(10px);
+    }
+
+    .pager-btn {
+      min-width: 100px;
+      height: 44px;
+      border-radius: 14px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      font-weight: 700;
+    }
+
+    .page-indicator {
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+      flex: 1;
+    }
+
+    /* Drawer */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.35);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s ease;
+      z-index: 40;
+    }
+
+    .overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: min(88vw, 360px);
+      height: 100dvh;
+      background: var(--paper);
+      border-right: 1px solid var(--line);
+      box-shadow: 0 20px 60px rgba(0,0,0,.18);
+      transform: translateX(-100%);
+      transition: transform .24s ease;
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      padding-top: var(--safe-top);
+    }
+
+    .drawer.show {
+      transform: translateX(0);
+    }
+
+    .drawer-header {
+      padding: 16px 18px 10px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .drawer-title {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .drawer-section {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .drawer-label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 12px;
+      letter-spacing: .08em;
+    }
+
+    .toc-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .toc-item {
+      width: 100%;
+      text-align: left;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+    }
+
+    .toc-item.active {
+      background: rgba(233, 75, 125, .10);
+      border-color: rgba(233, 75, 125, .25);
+    }
+
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .segmented {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .segmented button {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+    }
+
+    .segmented button.active {
+      background: rgba(30, 58, 138, .12);
+      border-color: rgba(30,58,138,.25);
+      color: var(--accent-dark);
+      font-weight: 700;
+    }
+
+    .bookmark-note {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .footer-note {
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      padding: 14px 20px 24px;
+    }
+  </style>
+</head>
+<body class="theme-light">
+  <div class="app">
+    <!-- COVER -->
+    <section id="coverScreen" class="screen cover-screen active">
+      <div class="cover-panel">
+        <div class="eyebrow">NOVEL VIEWER</div>
+        <h1 class="book-title">今日、学校休みかな</h1>
+        <p class="book-sub">
+          青春の延長線上で、世界の輪郭が少しだけずれる。<br>
+          そして翌朝、空には巨大な侵略船が浮かんでいた。
+        </p>
+        <div class="cover-actions">
+          <button class="primary-btn" id="startReadingBtn">読む</button>
+          <button class="secondary-btn" id="resumeReadingBtn">しおりから再開</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- READER -->
+    <section id="readerScreen" class="screen reader-screen">
+      <header class="topbar">
+        <div class="left">
+          <button class="icon-btn" id="backToCoverBtn">表紙</button>
+          <button class="icon-btn" id="openDrawerBtn">目次</button>
+        </div>
+        <div class="header-title" id="headerTitle">今日、学校休みかな</div>
+        <div class="right">
+          <button class="icon-btn" id="toggleVerticalBtn">縦</button>
+          <button class="icon-btn" id="smallerFontBtn">A-</button>
+          <button class="icon-btn" id="largerFontBtn">A+</button>
+          <button class="icon-btn" id="bookmarkBtn">栞</button>
+        </div>
+      </header>
+
+      <main class="reader-main">
+        <article class="page-card">
+          <div class="page-meta">
+            <div>
+              <div id="sectionNo">SECTION 1</div>
+              <h2 class="page-title" id="sectionTitle">序</h2>
+            </div>
+            <div id="readingTheme">LIGHT</div>
+          </div>
+          <div class="page-body" id="pageBody"></div>
+        </article>
+      </main>
+
+      <footer class="bottombar">
+        <button class="pager-btn" id="prevBtn">前へ</button>
+        <div class="page-indicator" id="pageIndicator">1 / 1</div>
+        <button class="pager-btn" id="nextBtn">次へ</button>
+      </footer>
+    </section>
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+
+  <aside class="drawer" id="drawer">
+    <div class="drawer-header">
+      <h2 class="drawer-title">今日、学校休みかな</h2>
+    </div>
+
+    <div class="drawer-section">
+      <div class="drawer-label">目次</div>
+      <div class="toc-list" id="tocList"></div>
+    </div>
+
+    <div class="drawer-section">
+      <div class="drawer-label">表示設定</div>
+
+      <div class="setting-row">
+        <span>テーマ</span>
+        <div class="segmented" id="themeButtons">
+          <button data-theme="light" class="active">白</button>
+          <button data-theme="dark">黒</button>
+          <button data-theme="midnight">紺</button>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <span>本文方向</span>
+        <div class="segmented" id="writingButtons">
+          <button data-writing="horizontal" class="active">横書き</button>
+          <button data-writing="vertical">縦書き</button>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <span>文字サイズ</span>
+        <div class="segmented">
+          <button id="drawerSmallerBtn">小</button>
+          <button id="drawerLargerBtn">大</button>
+        </div>
+      </div>
+
+      <p class="bookmark-note">
+        「栞」を押すと現在位置を保存。<br>
+        次回は「しおりから再開」で同じ場所から読める。
+      </p>
+    </div>
+
+    <div class="footer-note">
+      Self-use bunko app style prototype
+    </div>
+  </aside>
+
+  <script>
+    const STORY = [
+      {
+        title: "最初のころ",
+        content: [
+          "佐倉と付き合い始めたのは、二学期の終わりだった。",
+          "きっかけは大したことじゃない。",
+          "最初のころ、僕たちはただのクラスメイトだった。同じクラスで、席が近くて、文化祭の準備でよく一緒に残る。そのくらい。",
+          "佐倉は変なやつだった。コンビニで肉まんを買えば、半分だけ食べて僕に渡す。",
+          "「もういらない」",
+          "「最初から半分売ってればいいのにね」",
+          "「そんな商品ないだろ」",
+          "「じゃあ作ればいいじゃん」",
+          "「誰が」",
+          "「人類」",
+          "佐倉はそう言って笑った。",
+          "その頃の僕は、佐倉が時々使う『人類』という言い方を、ちょっと変わった癖だと思っていた。普通は『みんな』とか『人間』とか言う。でも佐倉は、『人類って面白いよね』とか、『人類、寒さに弱すぎない？』とか、『人類って何で毎朝同じ時間に起きるの？』とか言った。",
+          "変なやつだった。でも、嫌いじゃなかった。",
+          "佐倉はよく空を見ていた。特に夕方。帰り道で急に立ち止まって、雲の向こうを見る。",
+          "「何見てるの」",
+          "「空」",
+          "「見ればわかる」",
+          "「この星の夕方、きれいだなって」",
+          "「この星？」",
+          "そう聞くと、佐倉は少しだけ間を置いた。",
+          "「この辺の空って意味」",
+          "「言い方変だな」",
+          "「そう？」",
+          "そのときは、それで終わった。"
+        ]
+      },
+      {
+        title: "台風の前日",
+        content: [
+          "十月の終わり。翌朝は台風が直撃するかもしれないと言われていた。",
+          "放課後、教室の窓に雨粒が当たっていた。文化祭の準備をしながら、佐倉は何度もスマホの天気予報を見ていた。",
+          "「ねえ、明日さ」",
+          "「うん」",
+          "「学校休みかな」",
+          "「どうだろ。朝にならないと分かんないんじゃない」",
+          "「休みだといいな」",
+          "「文化祭前なのに？」",
+          "佐倉は机に頬杖をついた。",
+          "「だって、休みなら一日ずっと一緒にいられるのに」",
+          "僕は手を止めた。",
+          "「付き合ってもないのに何言ってんの」",
+          "佐倉は一瞬だけきょとんとして、それから笑った。",
+          "「じゃあ付き合えばいいじゃん」",
+          "「そんな簡単に言う？」",
+          "「簡単じゃないよ」",
+          "「じゃあ何なんだよ」",
+          "佐倉は少しだけ目をそらした。",
+          "「そのうち分かる」",
+          "翌朝、台風は少しそれた。学校は普通にあった。",
+          "教室に入ってきた佐倉は、僕の顔を見るなり言った。",
+          "「最悪」",
+          "「何が」",
+          "「学校ある」",
+          "「普通だろ」",
+          "「休みたかったのに」",
+          "そう言って、僕の机から消しゴムを勝手に取った。",
+          "僕は何も言わなかった。でも、昨日の『じゃあ付き合えばいいじゃん』が、ずっと頭に残っていた。"
+        ]
+      },
+      {
+        title: "文化祭のあと",
+        content: [
+          "文化祭が終わった日の夕方。片づけを終えた教室には、僕と佐倉しか残っていなかった。",
+          "机は元の位置に戻されていた。壁に貼ってあった飾りもほとんど外されていて、昨日までとは別の教室みたいだった。",
+          "「終わっちゃったね」",
+          "佐倉が言った。",
+          "「終わったな」",
+          "「楽しかった？」",
+          "「まあまあ」",
+          "「私と一緒だったから？」",
+          "「何でそうなる」",
+          "「違うの？」",
+          "僕は答えなかった。",
+          "佐倉は窓際に寄りかかって、外を見た。",
+          "「この前さ」",
+          "「何」",
+          "「付き合えばいいじゃんって言ったの、覚えてる？」",
+          "「忘れるわけないだろ」",
+          "「そっか」",
+          "佐倉は笑った。",
+          "「じゃあ、どうする？」",
+          "「何が」",
+          "「付き合う？」",
+          "また軽い言い方だった。でも、今度は笑っていなかった。",
+          "僕は少しだけ考えた。本当は、考える必要なんてなかった。",
+          "「付き合う」",
+          "佐倉が目を丸くした。",
+          "「ほんとに？」",
+          "「そっちから聞いたんだろ」",
+          "「そうだけど」",
+          "「嫌ならいいけど」",
+          "「嫌じゃない」",
+          "佐倉はすぐに言った。それから、いつもの笑い方に戻った。",
+          "「じゃあ今日からね」",
+          "「何が」",
+          "「彼氏」",
+          "「分かってるよ」",
+          "「言ってみて」",
+          "「何を」",
+          "「彼女」",
+          "「嫌だ」",
+          "「なんで」",
+          "「恥ずかしい」",
+          "佐倉は笑った。",
+          "帰り道。駅までの途中で、佐倉が少しだけ僕の袖をつかんだ。手をつなぐでもなく、腕を組むでもなく。ただ、袖をつかんだまま歩いた。それが妙にうれしかった。"
+        ]
+      },
+      {
+        title: "冬とマフラー",
+        content: [
+          "十二月になった。僕たちは付き合い始めて一か月くらいになっていた。街はクリスマス一色だった。",
+          "駅前のイルミネーションを見ながら歩いていたとき、佐倉が言った。",
+          "「地球って、冬に光らせるんだね」",
+          "「地球？」",
+          "「街」",
+          "「また言い方変」",
+          "「ごめん」",
+          "佐倉は笑った。",
+          "その日、僕は青いマフラーをプレゼントした。",
+          "佐倉はしばらく黙っていた。",
+          "「気に入らなかった？」",
+          "「違う」",
+          "「じゃあ何」",
+          "佐倉はマフラーを両手で持ったまま、困ったように言った。",
+          "「物をもらったの、初めて」",
+          "「誕生日とかあるだろ」",
+          "「うん」",
+          "「家族からとか」",
+          "「……ない」",
+          "僕は少し気まずくなった。佐倉の家のことを、僕はほとんど知らなかった。両親の話を聞いたこともない。兄弟の話もない。家に遊びに行ったこともない。",
+          "「佐倉んちってさ」",
+          "「うん」",
+          "「どこ？」",
+          "「遠いよ」",
+          "「市外？」",
+          "「うん」",
+          "「何市？」",
+          "佐倉は答えなかった。代わりに僕の首にマフラーを巻きつけた。",
+          "「半分貸して」",
+          "「プレゼントしたのに」",
+          "「じゃあ共有」",
+          "一本のマフラーを二人で巻いて歩いた。すごく歩きにくかった。でも、楽しかった。"
+        ]
+      },
+      {
+        title: "いつもの日々",
+        content: [
+          "冬休みには映画を観に行った。佐倉は映画の途中で寝た。",
+          "「金返せ」",
+          "「寝てない」",
+          "「寝てた」",
+          "「目を休めてた」",
+          "「三十分も？」",
+          "「集中して休めた」",
+          "僕は笑った。",
+          "夜はよくメッセージを送り合った。どうでもいい写真。食べたもの。眠い。寒い。今何してる。本当にどうでもいいことばかりだった。でも、そういうやり取りが続くことがうれしかった。",
+          "一月。冬休みが終わって、学校が始まった。",
+          "佐倉はいつも通り隣にいた。授業中に寝て。数学で困って。昼休みに僕のパンを勝手に食べて。放課後、一緒に帰った。",
+          "何も変わらなかった。"
+        ]
+      },
+      {
+        title: "佐倉の家",
+        content: [
+          "ただ、一月十七日の放課後。佐倉が突然言った。",
+          "「今日、うち来る？」",
+          "僕は一瞬、返事ができなかった。",
+          "「え」",
+          "「嫌？」",
+          "「嫌じゃないけど」",
+          "「じゃあ来て」",
+          "「急だな」",
+          "「今日しか無理だから」",
+          "その言い方が少し気になった。でも、それ以上に緊張した。",
+          "佐倉の家。初めてだった。",
+          "電車を二回乗り換えた。駅を降りて、住宅街を歩いた。佐倉はどんどん人通りの少ない方へ進んだ。",
+          "「ほんとにこっち？」",
+          "「うん」",
+          "「家なくなってきたけど」",
+          "「もうちょっと」",
+          "十分ほど歩くと、大きな雑木林があった。佐倉はその中へ入っていった。",
+          "「いや、待て」",
+          "「何？」",
+          "「家どこ」",
+          "「もうすぐ」",
+          "「完全に森なんだけど」",
+          "「大丈夫」",
+          "大丈夫じゃない。でも僕はついていった。",
+          "林の奥に、古い倉庫があった。錆びたトタン。割れた窓。どう見ても人が住む場所じゃない。",
+          "「佐倉」",
+          "「うん」",
+          "「ここ？」",
+          "「ここ」",
+          "「嘘だろ」",
+          "「入って」"
+        ]
+      },
+      {
+        title: "宇宙船",
+        content: [
+          "中は真っ暗だった。一歩入る。二歩。その瞬間。後ろで扉が閉まった。",
+          "「佐倉？」",
+          "返事がない。暗闇の奥で、低い音がした。ブーン、と空気が震える。床が青白く光った。",
+          "僕は動けなくなった。倉庫だと思っていた壁が、ゆっくり消えた。その向こうに、金属のような空間が広がっていた。丸い通路。光る壁。見たことのない文字。",
+          "そして佐倉が、その真ん中に立っていた。",
+          "「ごめん」",
+          "「何これ」",
+          "佐倉は制服のままだった。でも、首元に青い光が走った。皮膚の下から光っているみたいだった。",
+          "「佐倉」",
+          "「うん」",
+          "「何これ」",
+          "同じことしか言えなかった。",
+          "佐倉は少し困った顔をした。",
+          "「宇宙船」",
+          "僕は笑った。",
+          "「何言ってんの」",
+          "「ほんと」",
+          "「ドッキリ？」",
+          "「違う」",
+          "「じゃあ何」",
+          "「私、地球人じゃない」",
+          "笑えなかった。",
+          "佐倉の顔はいつも通りだった。僕の好きな顔だった。",
+          "「意味わかんない」",
+          "「うん」",
+          "「宇宙人ってこと？」",
+          "「うん」",
+          "「本気で言ってる？」",
+          "「うん」",
+          "「何で学校にいたの」",
+          "佐倉は黙った。",
+          "「何で俺と付き合ったの」",
+          "それを聞いたとき、佐倉の表情が変わった。少しだけ悲しそうになった。",
+          "「調査」",
+          "胸の奥が冷たくなった。",
+          "「調査？」",
+          "「地球人の生活。学校。文化。人間関係」",
+          "「じゃあ俺は」",
+          "「最初は対象」",
+          "最初は。その言葉だけが耳に残った。",
+          "「最初はって何」",
+          "佐倉は僕を見た。",
+          "「途中から、違った」",
+          "「何が」",
+          "「好きになった」"
+        ]
+      },
+      {
+        title: "今日、学校休みかな",
+        content: [
+          "僕は何も言えなかった。宇宙人に告白されている。状況としては意味不明だった。でも、佐倉が泣きそうな顔をしていることだけは分かった。",
+          "「じゃあ、もういいじゃん」",
+          "僕は言った。",
+          "「何が」",
+          "「調査終わりで」",
+          "佐倉は首を横に振った。",
+          "「無理」",
+          "「何で」",
+          "「明日だから」",
+          "「何が」",
+          "少し長い沈黙。",
+          "佐倉は答えた。",
+          "「侵攻」",
+          "最初、言葉の意味が入ってこなかった。",
+          "「何？」",
+          "「明日の朝、始まる」",
+          "「何が」",
+          "「地球侵攻」",
+          "僕は笑った。笑うしかなかった。",
+          "「いやいや」",
+          "「ほんと」",
+          "「何で」",
+          "「決まってるから」",
+          "「誰が決めたの」",
+          "「上」",
+          "「上って誰だよ」",
+          "「母艦」",
+          "その瞬間、天井の一部が透明になった。夜空が見えた。星が見えた。その中に、一つだけ星じゃないものがあった。巨大な黒い影。雲より大きい。ゆっくり動いていた。",
+          "僕の膝から力が抜けた。",
+          "「嘘だろ」",
+          "「ごめん」",
+          "佐倉が近づいてきた。",
+          "「じゃあ止めろよ」",
+          "「無理」",
+          "「仲間なんだろ」",
+          "「命令だから」",
+          "「俺のこと好きなんだろ」",
+          "佐倉は黙った。",
+          "「好きなら止めろよ」",
+          "「好き」",
+          "「じゃあ！」",
+          "「でも侵攻もする」",
+          "あまりにも普通に言った。",
+          "「それ両立する？」",
+          "「するよ」",
+          "「しないだろ」",
+          "「私たちはする」",
+          "佐倉は僕の手を握った。いつもと同じ手だった。温かかった。",
+          "「君は助ける」",
+          "「俺だけ？」",
+          "「うん」",
+          "「家族は？」",
+          "「無理」",
+          "「友達は？」",
+          "「無理」",
+          "「人類は？」",
+          "佐倉は少し考えた。",
+          "「かなり減る」",
+          "「かなりってどれくらい」",
+          "「かなり」",
+          "僕は手を振りほどいた。",
+          "「ふざけんなよ」",
+          "「ごめん」",
+          "「謝って済むかよ」",
+          "「済まない」",
+          "しばらくして、僕は聞いた。",
+          "「何で今日、教えたの」",
+          "「秘密にしててもよかっただろ」",
+          "佐倉は少し笑った。",
+          "「恋人だから」",
+          "その答えが、いちばん腹が立った。",
+          "家に帰ったのは夜十一時だった。母親には、友達の家に行っていたと言った。眠れなかった。スマホで『宇宙船』『UFO』『空 巨大な影』と検索した。何も出てこなかった。世界は普通だった。",
+          "午前三時。佐倉からメッセージが来た。『起きてる？』返さなかった。三分後。『ごめんね』また来た。そして最後に、『学校で会えてよかった』。僕は画面を見たまま朝を迎えた。",
+          "六時四十二分。空が白み始めた。六時四十三分。地鳴りがした。窓が揺れた。母親が一階から叫んだ。テレビをつける。全チャンネルが緊急速報だった。東京上空に巨大な物体。大阪。ニューヨーク。ロンドン。上海。世界中。黒い船が空を覆っていた。",
+          "七時ちょうど。最初の光が落ちた。遠くで何かが爆発した。",
+          "スマホが鳴った。佐倉だった。",
+          "『おはよう』",
+          "続けて、",
+          "『今日、学校休みかな』",
+          "僕は画面を見た。十月の雨の日を思い出した。——休みなら一日ずっと一緒にいられるのに。あのとき佐倉はそう言った。そのあと僕は、『付き合ってもないのに何言ってんの』と言った。佐倉は、『じゃあ付き合えばいいじゃん』と笑った。",
+          "外ではサイレンが鳴っていた。黒い船が空を埋めていた。街の向こうで煙が上がっていた。",
+          "僕は返信した。",
+          "『たぶん休み』",
+          "すぐ既読がついた。",
+          "『やった』",
+          "少しして、もう一通来た。",
+          "『じゃあ会える？』",
+          "僕は窓の外を見た。人類は侵略されていた。世界中で、昨日までの日常が消え始めていた。",
+          "それでも僕は、少しだけ会いたいと思ってしまった。"
+        ]
+      }
+    ];
+
+    const STORAGE_KEYS = {
+      section: "bunko_current_section",
+      bookmark: "bunko_bookmark_section",
+      theme: "bunko_theme",
+      writing: "bunko_writing",
+      fontSize: "bunko_font_size"
+    };
+
+    const coverScreen = document.getElementById("coverScreen");
+    const readerScreen = document.getElementById("readerScreen");
+    const pageBody = document.getElementById("pageBody");
+    const sectionTitle = document.getElementById("sectionTitle");
+    const sectionNo = document.getElementById("sectionNo");
+    const pageIndicator = document.getElementById("pageIndicator");
+    const headerTitle = document.getElementById("headerTitle");
+    const readingTheme = document.getElementById("readingTheme");
+    const tocList = document.getElementById("tocList");
+    const overlay = document.getElementById("overlay");
+    const drawer = document.getElementById("drawer");
+
+    let currentSection = parseInt(localStorage.getItem(STORAGE_KEYS.section) || "0", 10);
+    let currentTheme = localStorage.getItem(STORAGE_KEYS.theme) || "light";
+    let currentWriting = localStorage.getItem(STORAGE_KEYS.writing) || "horizontal";
+    let currentFontSize = parseInt(localStorage.getItem(STORAGE_KEYS.fontSize) || "18", 10);
+
+    function saveCurrentSection() {
+      localStorage.setItem(STORAGE_KEYS.section, String(currentSection));
+    }
+
+    function applyTheme(theme) {
+      document.body.classList.remove("theme-light", "theme-dark", "theme-midnight");
+      document.body.classList.add(`theme-${theme}`);
+      currentTheme = theme;
+      localStorage.setItem(STORAGE_KEYS.theme, theme);
+      readingTheme.textContent = theme.toUpperCase();
+      document.querySelectorAll("#themeButtons button").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.theme === theme);
+      });
+    }
+
+    function applyWritingMode(mode) {
+      currentWriting = mode;
+      localStorage.setItem(STORAGE_KEYS.writing, mode);
+      pageBody.classList.toggle("vertical", mode === "vertical");
+      document.querySelectorAll("#writingButtons button").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.writing === mode);
+      });
+      document.getElementById("toggleVerticalBtn").textContent = mode === "vertical" ? "横" : "縦";
+    }
+
+    function applyFontSize(size) {
+      currentFontSize = Math.min(26, Math.max(14, size));
+      document.documentElement.style.setProperty("--font-size", currentFontSize + "px");
+      localStorage.setItem(STORAGE_KEYS.fontSize, String(currentFontSize));
+    }
+
+    function renderTOC() {
+      tocList.innerHTML = "";
+      STORY.forEach((section, index) => {
+        const btn = document.createElement("button");
+        btn.className = "toc-item" + (index === currentSection ? " active" : "");
+        btn.innerHTML = `<strong>${index + 1}. ${section.title}</strong>`;
+        btn.addEventListener("click", () => {
+          currentSection = index;
+          renderSection();
+          closeDrawer();
+          openReader();
+        });
+        tocList.appendChild(btn);
+      });
+    }
+
+    function renderSection() {
+      const section = STORY[currentSection];
+      sectionTitle.textContent = section.title;
+      sectionNo.textContent = `SECTION ${currentSection + 1}`;
+      headerTitle.textContent = `今日、学校休みかな — ${section.title}`;
+      pageIndicator.textContent = `${currentSection + 1} / ${STORY.length}`;
+
+      pageBody.innerHTML = "";
+      section.content.forEach(paragraph => {
+        const p = document.createElement("p");
+        p.textContent = paragraph;
+        pageBody.appendChild(p);
+      });
+
+      document.getElementById("prevBtn").disabled = currentSection === 0;
+      document.getElementById("nextBtn").disabled = currentSection === STORY.length - 1;
+      document.getElementById("prevBtn").style.opacity = currentSection === 0 ? ".45" : "1";
+      document.getElementById("nextBtn").style.opacity = currentSection === STORY.length - 1 ? ".45" : "1";
+
+      saveCurrentSection();
+      renderTOC();
+      pageBody.scrollTop = 0;
+      pageBody.scrollLeft = 0;
+    }
+
+    function openReader() {
+      coverScreen.classList.remove("active");
+      readerScreen.classList.add("active");
+    }
+
+    function openCover() {
+      readerScreen.classList.remove("active");
+      coverScreen.classList.add("active");
+    }
+
+    function openDrawer() {
+      overlay.classList.add("show");
+      drawer.classList.add("show");
+    }
+
+    function closeDrawer() {
+      overlay.classList.remove("show");
+      drawer.classList.remove("show");
+    }
+
+    function saveBookmark() {
+      localStorage.setItem(STORAGE_KEYS.bookmark, String(currentSection));
+      alert("しおりを保存しました。");
+    }
+
+    function resumeFromBookmark() {
+      const bookmark = localStorage.getItem(STORAGE_KEYS.bookmark);
+      if (bookmark !== null) {
+        currentSection = parseInt(bookmark, 10);
+      }
+      renderSection();
+      openReader();
+    }
+
+    document.getElementById("startReadingBtn").addEventListener("click", () => {
+      currentSection = 0;
+      renderSection();
+      openReader();
+    });
+
+    document.getElementById("resumeReadingBtn").addEventListener("click", () => {
+      resumeFromBookmark();
+    });
+
+    document.getElementById("backToCoverBtn").addEventListener("click", openCover);
+    document.getElementById("openDrawerBtn").addEventListener("click", openDrawer);
+    overlay.addEventListener("click", closeDrawer);
+
+    document.getElementById("prevBtn").addEventListener("click", () => {
+      if (currentSection > 0) {
+        currentSection--;
+        renderSection();
+      }
+    });
+
+    document.getElementById("nextBtn").addEventListener("click", () => {
+      if (currentSection < STORY.length - 1) {
+        currentSection++;
+        renderSection();
+      }
+    });
+
+    document.getElementById("bookmarkBtn").addEventListener("click", saveBookmark);
+
+    document.getElementById("smallerFontBtn").addEventListener("click", () => {
+      applyFontSize(currentFontSize - 1);
+    });
+
+    document.getElementById("largerFontBtn").addEventListener("click", () => {
+      applyFontSize(currentFontSize + 1);
+    });
+
+    document.getElementById("drawerSmallerBtn").addEventListener("click", () => {
+      applyFontSize(currentFontSize - 1);
+    });
+
+    document.getElementById("drawerLargerBtn").addEventListener("click", () => {
+      applyFontSize(currentFontSize + 1);
+    });
+
+    document.getElementById("toggleVerticalBtn").addEventListener("click", () => {
+      applyWritingMode(currentWriting === "vertical" ? "horizontal" : "vertical");
+    });
+
+    document.querySelectorAll("#themeButtons button").forEach(btn => {
+      btn.addEventListener("click", () => applyTheme(btn.dataset.theme));
+    });
+
+    document.querySelectorAll("#writingButtons button").forEach(btn => {
+      btn.addEventListener("click", () => applyWritingMode(btn.dataset.writing));
+    });
+
+    // swipe
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    pageBody.addEventListener("touchstart", (e) => {
+      const t = e.changedTouches[0];
+      touchStartX = t.clientX;
+      touchStartY = t.clientY;
+    }, { passive: true });
+
+    pageBody.addEventListener("touchend", (e) => {
+      const t = e.changedTouches[0];
+      const dx = t.clientX - touchStartX;
+      const dy = t.clientY - touchStartY;
+
+      if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy)) {
+        if (dx < 0 && currentSection < STORY.length - 1) {
+          currentSection++;
+          renderSection();
+        } else if (dx > 0 && currentSection > 0) {
+          currentSection--;
+          renderSection();
+        }
+      }
+    }, { passive: true });
+
+    // keyboard
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight") {
+        if (currentSection < STORY.length - 1) {
+          currentSection++;
+          renderSection();
+        }
+      } else if (e.key === "ArrowLeft") {
+        if (currentSection > 0) {
+          currentSection--;
+          renderSection();
+        }
+      } else if (e.key === "Escape") {
+        closeDrawer();
+      }
+    });
+
+    // init
+    applyTheme(currentTheme);
+    applyWritingMode(currentWriting);
+    applyFontSize(currentFontSize);
+    renderTOC();
+    renderSection();
+
+    // optional service worker
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>
