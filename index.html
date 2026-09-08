@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#07152d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="今日、学校休みかな">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="cover.png">
+  <title>今日、学校休みかな</title>
+  <style>
+    :root { color-scheme: dark; --ink:#e9e4d8; --paper:#f5f0e6; --navy:#07152d; }
+    * { box-sizing: border-box; }
+    body { margin:0; min-height:100svh; background:#020711; font-family: ui-rounded, "Hiragino Sans", "Yu Gothic", sans-serif; }
+    button { font:inherit; }
+    .screen { min-height:100svh; }
+    #shelf { display:grid; place-items:center; padding:24px; background:radial-gradient(circle at 50% 5%, #243f69, #07152d 48%, #020711); }
+    .book { width:min(82vw, 420px); aspect-ratio:2/3; position:relative; border-radius:5px 12px 12px 5px; overflow:hidden; box-shadow:-10px 12px 28px #000a, 0 0 0 1px #ffffff28; cursor:pointer; }
+    .book::after { content:""; position:absolute; inset:0; pointer-events:none; background:linear-gradient(90deg, #0006, transparent 8%, transparent 84%, #0003); }
+    .book img { width:100%; height:100%; object-fit:cover; display:block; }
+    .hint { margin:20px 0 0; color:#d6deed; letter-spacing:.08em; font-size:.86rem; }
+    #reader { display:none; background:#1c1b19; }
+    #reader.open { display:flex; flex-direction:column; }
+    header { height:54px; display:flex; align-items:center; justify-content:space-between; padding:0 15px; color:#ded8ca; background:#111; flex:none; }
+    header button { color:inherit; background:transparent; border:0; padding:10px 4px; cursor:pointer; }
+    #counter { font-size:.8rem; opacity:.75; }
+    #pages { flex:1; overflow:hidden; position:relative; touch-action:pan-y; }
+    .page { position:absolute; inset:0; display:none; padding:25px 28px 35px; background:var(--paper); color:#28231d; writing-mode:vertical-rl; text-orientation:mixed; line-height:2.05; letter-spacing:.05em; overflow:hidden; font-family:"Hiragino Mincho ProN", "Yu Mincho", serif; font-size:clamp(17px, 4.4vw, 21px); box-shadow:inset 8px 0 18px #6a5a3f14; }
+    .page.current { display:block; animation:appear .18s ease-out; }
+    .page p { margin:0 0 1.7em; }
+    .page .chapter { font-size:1.35em; font-weight:normal; }
+    .tap { position:absolute; inset-block:0; width:29%; border:0; background:transparent; z-index:2; }
+    #prev { inset-inline-start:0; } #next { inset-inline-end:0; }
+    .end { color:#86745c; }
+    @keyframes appear { from { opacity:.2; transform:translateX(-8px); } to { opacity:1; transform:none; } }
+    @media (min-width:700px) { #reader { max-width:520px; margin:auto; min-height:100svh; box-shadow:0 0 40px #000; } }
+  </style>
+</head>
+<body>
+  <main id="shelf" class="screen" aria-label="表紙">
+    <div class="book" id="openBook" role="button" tabindex="0" aria-label="今日、学校休みかなを読む"><img src="cover.png" alt="短編『今日、学校休みかな』表紙"></div>
+    <p class="hint">表紙をタップして読む</p>
+  </main>
+
+  <main id="reader" class="screen" aria-label="本文">
+    <header><button id="close" aria-label="表紙に戻る">‹ 表紙</button><span id="counter"></span><button id="font" aria-label="文字サイズを変える">Aa</button></header>
+    <section id="pages" aria-live="polite"></section>
+  </main>
+  <script>
+    /* 本文は完成原稿を受け取り次第、この配列に差し替えます。 */
+    const STORY_PAGES = [
+      `<p class="chapter">今日、学校休みかな</p><p>本文を準備中です。</p><p>このページは公開前の仮ページです。</p>`,
+      `<p class="end">　　おわり</p>`
+    ];
+    const shelf = document.querySelector('#shelf'), reader = document.querySelector('#reader');
+    const pages = document.querySelector('#pages'), counter = document.querySelector('#counter');
+    let page = 0, fontLarge = false, startX = 0;
+    const render = () => {
+      pages.innerHTML = STORY_PAGES.map((html, i) => `<article class="page ${i === page ? 'current' : ''}">${html}</article>`).join('') + '<button id="prev" class="tap" aria-label="前のページ"></button><button id="next" class="tap" aria-label="次のページ"></button>';
+      counter.textContent = `${page + 1} / ${STORY_PAGES.length}`;
+      document.querySelector('#prev').onclick = () => move(-1);
+      document.querySelector('#next').onclick = () => move(1);
+    };
+    const open = () => { shelf.style.display='none'; reader.classList.add('open'); page=0; render(); };
+    const move = n => { page = Math.max(0, Math.min(STORY_PAGES.length - 1, page + n)); render(); };
+    document.querySelector('#openBook').onclick = open;
+    document.querySelector('#openBook').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') open(); };
+    document.querySelector('#close').onclick = () => { reader.classList.remove('open'); shelf.style.display='grid'; };
+    document.querySelector('#font').onclick = () => { fontLarge = !fontLarge; pages.style.fontSize = fontLarge ? '24px' : ''; };
+    pages.addEventListener('touchstart', e => startX = e.changedTouches[0].screenX, {passive:true});
+    pages.addEventListener('touchend', e => { const d = e.changedTouches[0].screenX - startX; if (Math.abs(d) > 45) move(d < 0 ? 1 : -1); }, {passive:true});
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+  </script>
+</body>
+</html>

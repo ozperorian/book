@@ -1,0 +1,12 @@
+{
+  "name": "今日、学校休みかな",
+  "short_name": "今日、学校休みかな",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#07152d",
+  "theme_color": "#07152d",
+  "lang": "ja",
+  "icons": [
+    { "src": "cover.png", "sizes": "any", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
