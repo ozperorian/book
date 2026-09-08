@@ -49,11 +49,7 @@
     <section id="pages" aria-live="polite"></section>
   </main>
   <script>
-    /* 本文は完成原稿を受け取り次第、この配列に差し替えます。 */
-    const STORY_PAGES = [
-      `<p class="chapter">今日、学校休みかな</p><p>本文を準備中です。</p><p>このページは公開前の仮ページです。</p>`,
-      `<p class="end">　　おわり</p>`
-    ];
+    let STORY_PAGES = [];
     const shelf = document.querySelector('#shelf'), reader = document.querySelector('#reader');
     const pages = document.querySelector('#pages'), counter = document.querySelector('#counter');
     let page = 0, fontLarge = false, startX = 0;
@@ -63,7 +59,22 @@
       document.querySelector('#prev').onclick = () => move(-1);
       document.querySelector('#next').onclick = () => move(1);
     };
-    const open = () => { shelf.style.display='none'; reader.classList.add('open'); page=0; render(); };
+    const escapeHtml = text => text.replace(/[&<>]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[char]));
+    const loadStory = async () => {
+      if (STORY_PAGES.length) return;
+      const response = await fetch('./story.txt', {cache:'no-store'});
+      if (!response.ok) throw new Error('story.txt was not found');
+      const paragraphs = (await response.text()).trim().split(/\n\s*\n/).map(escapeHtml);
+      STORY_PAGES = [
+        `<p class="chapter">今日、学校休みかな</p>`,
+        ...Array.from({length: Math.ceil(paragraphs.length / 5)}, (_, i) => paragraphs.slice(i * 5, i * 5 + 5).map(text => `<p>${text}</p>`).join('')),
+        `<p class="end">　　おわり</p>`
+      ];
+    };
+    const open = async () => {
+      try { await loadStory(); shelf.style.display='none'; reader.classList.add('open'); page=0; render(); }
+      catch { alert('本文を準備中です。'); }
+    };
     const move = n => { page = Math.max(0, Math.min(STORY_PAGES.length - 1, page + n)); render(); };
     document.querySelector('#openBook').onclick = open;
     document.querySelector('#openBook').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') open(); };
