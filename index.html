@@ -31,6 +31,7 @@
     .page.current { display:block; animation:appear .18s ease-out; }
     .page p { margin:0 0 1.7em; }
     .page .chapter { font-size:1.35em; font-weight:normal; }
+    .page .section { font-size:1.08em; color:#655b4b; margin:0 0 3.3em; }
     .tap { position:absolute; inset-block:0; width:29%; border:0; background:transparent; z-index:2; }
     #prev { inset-inline-start:0; } #next { inset-inline-end:0; }
     .end { color:#86745c; }
@@ -65,9 +66,18 @@
       const response = await fetch('./story.txt', {cache:'no-store'});
       if (!response.ok) throw new Error('story.txt was not found');
       const paragraphs = (await response.text()).trim().split(/\n\s*\n/).map(escapeHtml);
+      const sectionStarts = new Set(['十月の終わり。', '文化祭が終わった日の夕方。', '十二月になった。', '一月。', '午前三時。', '六時四十二分。']);
+      const groups = [];
+      let group = [];
+      for (const text of paragraphs) {
+        if (sectionStarts.has(text) && group.length) { groups.push(group); group = []; }
+        group.push(text);
+        if (group.length === 5) { groups.push(group); group = []; }
+      }
+      if (group.length) groups.push(group);
       STORY_PAGES = [
         `<p class="chapter">今日、学校休みかな</p>`,
-        ...Array.from({length: Math.ceil(paragraphs.length / 5)}, (_, i) => paragraphs.slice(i * 5, i * 5 + 5).map(text => `<p>${text}</p>`).join('')),
+        ...groups.map(group => group.map((text, i) => `<p${i === 0 && sectionStarts.has(text) ? ' class="section"' : ''}>${text}</p>`).join('')),
         `<p class="end">　　おわり</p>`
       ];
     };
