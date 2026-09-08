@@ -81,7 +81,7 @@
     document.querySelector('#close').onclick = () => { reader.classList.remove('open'); shelf.style.display='grid'; };
     document.querySelector('#font').onclick = () => { fontLarge = !fontLarge; pages.style.fontSize = fontLarge ? '24px' : ''; };
     pages.addEventListener('touchstart', e => startX = e.changedTouches[0].screenX, {passive:true});
-    pages.addEventListener('touchend', e => { const d = e.changedTouches[0].screenX - startX; if (Math.abs(d) > 45) move(d < 0 ? 1 : -1); }, {passive:true});
+    pages.addEventListener('touchend', e => { const d = e.changedTouches[0].screenX - startX; if (Math.abs(d) > 45) move(d > 0 ? 1 : -1); }, {passive:true});
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
   </script>
 </body>

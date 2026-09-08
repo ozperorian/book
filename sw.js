@@ -1,4 +1,4 @@
-const CACHE = 'kyou-gakkou-v1';
+const CACHE = 'kyou-gakkou-v2';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './sw.js', './cover.png', './story.txt'];
 self.addEventListener('install', event => event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS))));
 self.addEventListener('activate', event => event.waitUntil(self.clients.claim()));
